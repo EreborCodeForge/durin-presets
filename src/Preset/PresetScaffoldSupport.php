@@ -222,19 +222,13 @@ PHP;
     }
 
     /**
-     * Root Composer repositories for generated apps.
-     *
-     * Durin transitive packages (core / presets / architecture) resolve from Packagist.
-     * Only Forge remains as a transitional VCS entry until it is published on Packagist;
-     * remove this list entirely once `ereborcodeforge/durins-forge` is available without VCS.
+     * Generated apps resolve Forge from Packagist — no root VCS repositories.
      *
      * @return list<array{type: string, url: string}>
      */
     private function composerRepositories(): array
     {
-        return [
-            ['type' => 'vcs', 'url' => 'https://github.com/EreborCodeForge/durins-forge'],
-        ];
+        return [];
     }
 
     /**

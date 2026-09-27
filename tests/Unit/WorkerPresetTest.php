@@ -83,12 +83,10 @@ final class WorkerPresetTest extends TestCase
 
     private function assertGeneratedComposerRepositories(array $composer): void
     {
-        $repos = $composer['repositories'] ?? [];
-        $urls = array_map(static fn (array $r): string => $r['url'] ?? '', $repos);
-        $this->assertSame(
-            ['https://github.com/EreborCodeForge/durins-forge'],
-            $urls,
-            'Generated apps must not embed nested Durin VCS repos (Packagist resolves transitive deps).'
+        $this->assertArrayNotHasKey(
+            'repositories',
+            $composer,
+            'Generated apps must resolve Durin packages from Packagist without root VCS repositories.'
         );
     }
 
