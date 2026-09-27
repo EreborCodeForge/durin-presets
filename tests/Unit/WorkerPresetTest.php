@@ -67,6 +67,7 @@ final class WorkerPresetTest extends TestCase
         $this->assertSame('App\\JobKernel', $composer['extra']['mithril']['job_kernel']);
         $this->assertSame('^0.1', $composer['require']['ereborcodeforge/durins-forge']);
         $this->assertArrayNotHasKey('ereborcodeforge/mithrilphp', $composer['require']);
+        $this->assertGeneratedComposerRepositories($composer);
 
         $kernel = (string) file_get_contents($target . '/src/JobKernel.php');
         $this->assertStringContainsString('implements JobApplication', $kernel);
@@ -78,6 +79,17 @@ final class WorkerPresetTest extends TestCase
         $registry = (new DefaultPresetRegistryFactory())->create();
         $this->assertTrue($registry->has('worker'));
         $this->assertContains('worker', $registry->names());
+    }
+
+    private function assertGeneratedComposerRepositories(array $composer): void
+    {
+        $repos = $composer['repositories'] ?? [];
+        $urls = array_map(static fn (array $r): string => $r['url'] ?? '', $repos);
+        $this->assertSame(
+            ['https://github.com/EreborCodeForge/durins-forge'],
+            $urls,
+            'Generated apps must not embed nested Durin VCS repos (Packagist resolves transitive deps).'
+        );
     }
 
     private function removeTree(string $path): void
