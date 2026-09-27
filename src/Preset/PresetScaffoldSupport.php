@@ -222,24 +222,42 @@ PHP;
     }
 
     /**
+     * Root Composer repositories for generated apps.
+     *
+     * Durin transitive packages (core / presets / architecture) resolve from Packagist.
+     * Only Forge remains as a transitional VCS entry until it is published on Packagist;
+     * remove this list entirely once `ereborcodeforge/durins-forge` is available without VCS.
+     *
      * @return list<array{type: string, url: string}>
      */
-    private function vcsRepositories(): array
+    private function composerRepositories(): array
     {
         return [
             ['type' => 'vcs', 'url' => 'https://github.com/EreborCodeForge/durins-forge'],
-            ['type' => 'vcs', 'url' => 'https://github.com/EreborCodeForge/durin-core'],
-            ['type' => 'vcs', 'url' => 'https://github.com/EreborCodeForge/durin-presets'],
-            ['type' => 'vcs', 'url' => 'https://github.com/EreborCodeForge/durin-architecture'],
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $json
+     */
+    private function encodeComposerJson(array $json): string
+    {
+        $repositories = $this->composerRepositories();
+        if ($repositories !== []) {
+            // Keep repositories ahead of require for readability.
+            $ordered = ['name' => $json['name'], 'type' => $json['type'], 'repositories' => $repositories];
+            unset($json['name'], $json['type']);
+            $json = $ordered + $json;
+        }
+
+        return json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n";
     }
 
     public function composerJson(string $package): string
     {
-        $json = [
+        return $this->encodeComposerJson([
             'name' => $package,
             'type' => 'project',
-            'repositories' => $this->vcsRepositories(),
             'require' => [
                 'php' => '^8.5',
                 'ext-msgpack' => '*',
@@ -272,17 +290,14 @@ PHP;
             'config' => [
                 'sort-packages' => true,
             ],
-        ];
-
-        return json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n";
+        ]);
     }
 
     public function composerJsonWorker(string $package): string
     {
-        $json = [
+        return $this->encodeComposerJson([
             'name' => $package,
             'type' => 'project',
-            'repositories' => $this->vcsRepositories(),
             'require' => [
                 'php' => '^8.5',
                 'ext-msgpack' => '*',
@@ -314,9 +329,7 @@ PHP;
             'config' => [
                 'sort-packages' => true,
             ],
-        ];
-
-        return json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n";
+        ]);
     }
 
     public function jobKernel(string $app): string
