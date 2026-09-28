@@ -43,7 +43,10 @@ final class ServicePreset implements PresetDefinition
 
     public function runtime(): RuntimeProfile
     {
-        return new RuntimeProfile(mode: 'http');
+        return new RuntimeProfile(
+            mode: 'http',
+            requiredCapabilities: ['persistent-http'],
+        );
     }
 
     public function scaffold(ProjectOptions $options): ScaffoldPlan

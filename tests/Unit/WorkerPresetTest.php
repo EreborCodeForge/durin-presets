@@ -79,6 +79,11 @@ final class WorkerPresetTest extends TestCase
         $registry = (new DefaultPresetRegistryFactory())->create();
         $this->assertTrue($registry->has('worker'));
         $this->assertContains('worker', $registry->names());
+
+        $runtime = $registry->definition('worker')->runtime();
+        $this->assertSame('job', $runtime->mode);
+        $this->assertSame(['job-loop', 'messaging'], $runtime->requiredCapabilities);
+        $this->assertNull($runtime->preferredRunner);
     }
 
     private function assertGeneratedComposerRepositories(array $composer): void

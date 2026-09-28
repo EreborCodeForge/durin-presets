@@ -12,7 +12,7 @@ use EreborCodeForge\Durin\Presets\Metadata\RuntimeProfile;
 
 /**
  * Non-HTTP job / queue / scheduled worker preset (master §21, SPEC-DX-017).
- * Requires Mithril ^2.2 JobApplication + bin/job-worker (SPEC-MITHRIL-001).
+ * Declares runtime requirements (job-loop + messaging); Forge resolves the runner.
  */
 final class WorkerPreset implements PresetDefinition
 {
@@ -44,8 +44,8 @@ final class WorkerPreset implements PresetDefinition
     public function runtime(): RuntimeProfile
     {
         return new RuntimeProfile(
-            mode: 'worker',
-            capabilities: ['messaging'],
+            mode: 'job',
+            requiredCapabilities: ['job-loop', 'messaging'],
         );
     }
 

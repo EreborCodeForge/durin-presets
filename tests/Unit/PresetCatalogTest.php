@@ -16,6 +16,9 @@ use EreborCodeForge\Durin\Presets\Registry\PresetEngine;
 use EreborCodeForge\Durin\Presets\Registry\PresetRegistry;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Future-shaped preset with runtime requirements and no preferred runner.
+ */
 final class CatalogFakePreset implements PresetDefinition
 {
     public function __construct(
@@ -39,12 +42,16 @@ final class CatalogFakePreset implements PresetDefinition
             label: 'Catalog Fake',
             description: 'Extensibility probe',
             category: 'test',
+            capabilities: ['api'],
         );
     }
 
     public function runtime(): RuntimeProfile
     {
-        return new RuntimeProfile(mode: 'http');
+        return new RuntimeProfile(
+            mode: 'http',
+            requiredCapabilities: ['persistent-http'],
+        );
     }
 
     public function scaffold(ProjectOptions $options): ScaffoldPlan
@@ -161,18 +168,59 @@ final class RuntimeProfileTest extends TestCase
     public function test_runtime_profile_serialization_is_deterministic(): void
     {
         $profile = new RuntimeProfile(
-            mode: 'worker',
-            runner: null,
+            mode: 'job',
+            requiredCapabilities: ['job-loop', 'messaging'],
+            preferredCapabilities: [],
+            preferredRunner: null,
             installRunner: null,
-            capabilities: ['messaging'],
         );
 
         $this->assertSame([
-            'mode' => 'worker',
-            'runner' => null,
+            'mode' => 'job',
+            'required_capabilities' => ['job-loop', 'messaging'],
+            'preferred_capabilities' => [],
+            'preferred_runner' => null,
             'install_runner' => null,
-            'capabilities' => ['messaging'],
         ], $profile->toArray());
+    }
+
+    public function test_minimal_requirements(): void
+    {
+        $runtime = (new DefaultPresetRegistryFactory())->create()->definition('minimal')->runtime();
+
+        $this->assertSame('http', $runtime->mode);
+        $this->assertSame(['persistent-http'], $runtime->requiredCapabilities);
+        $this->assertSame([], $runtime->preferredCapabilities);
+        $this->assertNull($runtime->preferredRunner);
+        $this->assertNull($runtime->installRunner);
+    }
+
+    public function test_service_requirements(): void
+    {
+        $definition = (new DefaultPresetRegistryFactory())->create()->definition('service');
+        $runtime = $definition->runtime();
+        $metadata = $definition->metadata();
+
+        $this->assertSame('http', $runtime->mode);
+        $this->assertSame(['persistent-http'], $runtime->requiredCapabilities);
+        $this->assertNull($runtime->preferredRunner);
+        $this->assertContains('dependency-injection', $metadata->capabilities);
+        $this->assertContains('persistence-ready', $metadata->capabilities);
+        $this->assertNotContains('dependency-injection', $runtime->requiredCapabilities);
+        $this->assertNotContains('persistence-ready', $runtime->requiredCapabilities);
+    }
+
+    public function test_worker_requirements(): void
+    {
+        $runtime = (new DefaultPresetRegistryFactory())->create()->definition('worker')->runtime();
+
+        $this->assertSame('job', $runtime->mode);
+        $this->assertSame(['job-loop', 'messaging'], $runtime->requiredCapabilities);
+        $this->assertNull($runtime->preferredRunner);
+        $this->assertNull($runtime->installRunner);
+        $this->assertNotSame('worker', $runtime->mode);
+        $this->assertNotSame('consumer', $runtime->mode);
+        $this->assertNotSame('eregion', $runtime->preferredRunner);
     }
 }
 
@@ -184,6 +232,10 @@ final class BuiltInPresetCatalogTest extends TestCase
 
         $this->assertSame('minimal', $catalog['default']);
         $this->assertCount(3, $catalog['presets']);
+        $this->assertSame(
+            ['minimal', 'service', 'worker'],
+            array_column($catalog['presets'], 'id'),
+        );
 
         $byId = [];
         foreach ($catalog['presets'] as $row) {
@@ -191,9 +243,20 @@ final class BuiltInPresetCatalogTest extends TestCase
         }
 
         $this->assertSame('http', $byId['minimal']['runtime']['mode']);
+        $this->assertSame(['persistent-http'], $byId['minimal']['runtime']['required_capabilities']);
+        $this->assertNull($byId['minimal']['runtime']['preferred_runner']);
+
         $this->assertSame('http', $byId['service']['runtime']['mode']);
-        $this->assertSame('worker', $byId['worker']['runtime']['mode']);
-        $this->assertNull($byId['service']['runtime']['runner']);
+        $this->assertSame(['persistent-http'], $byId['service']['runtime']['required_capabilities']);
+        $this->assertNull($byId['service']['runtime']['preferred_runner']);
+
+        $this->assertSame('job', $byId['worker']['runtime']['mode']);
+        $this->assertSame(['job-loop', 'messaging'], $byId['worker']['runtime']['required_capabilities']);
+        $this->assertNull($byId['worker']['runtime']['preferred_runner']);
+
+        $encoded = json_encode($catalog, JSON_THROW_ON_ERROR);
+        $decoded = json_decode($encoded, true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame($catalog, $decoded);
     }
 
     public function test_all_built_ins_produce_valid_plans(): void
@@ -226,6 +289,17 @@ final class ExtensibilityTest extends TestCase
         $paths = array_map(static fn ($a) => $a->relativePath, $plan->actions());
         $this->assertContains('src', $paths);
         $this->assertContains('durin.yaml', $paths);
+    }
+
+    public function test_fake_future_preset_has_requirements_without_runner(): void
+    {
+        $preset = new CatalogFakePreset('api');
+        $runtime = $preset->runtime();
+
+        $this->assertSame('http', $runtime->mode);
+        $this->assertSame(['persistent-http'], $runtime->requiredCapabilities);
+        $this->assertNull($runtime->preferredRunner);
+        $this->assertArrayNotHasKey('runner', $runtime->toArray());
     }
 
     public function test_legacy_preset_still_registers_via_core_contract(): void

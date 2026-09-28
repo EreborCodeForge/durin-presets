@@ -26,7 +26,7 @@ requirements, and scaffold planning.
 ## Installation
 
 ```bash
-composer require ereborcodeforge/durin-presets:^0.2
+composer require ereborcodeforge/durin-presets:^0.3
 ```
 
 ## PHP requirement
@@ -86,6 +86,11 @@ Must not depend on `durin-architecture` or Durin Forge.
 - `PresetRegistry`, `PresetEngine`, `DefaultPresetRegistryFactory`
 - `ManifestPlanFactory`, `PresetScaffoldSupport`
 
+`RuntimeProfile` declares **runtime requirements** (`mode`, `requiredCapabilities`,
+optional `preferredCapabilities` / `preferredRunner`). Presets never select a concrete
+runtime such as Eregion; Forge resolves a runner that satisfies the requirements.
+
 ## Versioning
 
 **0.2.0** — preset catalog as ecosystem SSOT (discovery + default + runtime metadata).
+**0.3.0** — `RuntimeProfile` expresses requirements (`requiredCapabilities`) instead of a concrete `runner`; worker mode is `job`.
