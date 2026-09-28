@@ -2,12 +2,15 @@
 
 ## Purpose
 
-Architecture presets and project-shape policies for Durin.
+Single source of truth for Durin application presets: catalog, metadata, runtime
+requirements, and scaffold planning.
 
 ## What this package owns
 
-- Concrete presets: `minimal`, `service`, `worker`
-- Preset registry and planning engine
+- Built-in presets: `minimal`, `service`, `worker`
+- Public discovery API (`PresetDefinition`, `PresetMetadata`, `RuntimeProfile`, `PresetRegistry`)
+- Default preset (`minimal`) — only here
+- Preset planning engine (`PresetEngine` → `ScaffoldPlan`)
 - Preset scaffold templates / shared file contents
 - Manifest plan helpers for preset scaffolding
 
@@ -16,39 +19,38 @@ Architecture presets and project-shape policies for Durin.
 - Project discovery / `durin.yaml` parser (see `durin-core`)
 - Safe filesystem mutation engine (see `durin-core`)
 - Architecture detection, drift, adopt/evolve/migrate
-- Durin Forge CLI
+- Durin Forge CLI / Eregion installation
+- Installer UX / terminal progress
 - MithrilPHP / Eregion runtime
 
 ## Installation
 
 ```bash
-composer require ereborcodeforge/durin-presets
-```
-
-Local path development (until remotes are linked):
-
-```json
-{
-  "repositories": [
-    {
-      "type": "path",
-      "url": "../durin-core",
-      "options": { "symlink": true }
-    },
-    {
-      "type": "path",
-      "url": "../durin-presets",
-      "options": { "symlink": true }
-    }
-  ]
-}
+composer require ereborcodeforge/durin-presets:^0.2
 ```
 
 ## PHP requirement
 
 PHP `^8.5`
 
-## Basic usage
+## Catalog (read-only discovery)
+
+```php
+use EreborCodeForge\Durin\Presets\Registry\DefaultPresetRegistryFactory;
+
+$registry = (new DefaultPresetRegistryFactory())->create();
+
+$registry->ids();           // ['minimal', 'service', 'worker']
+$registry->default()->id(); // 'minimal'
+$registry->has('service');
+$registry->definition('service')->metadata()->toArray();
+$registry->catalog();       // { default, presets: [metadata + runtime] }
+```
+
+Installer and Forge may list/validate presets through this API only. They must not
+hardcode built-in preset ID arrays.
+
+## Planning
 
 ```php
 use EreborCodeForge\Durin\Core\Contract\ProjectOptions;
@@ -59,6 +61,14 @@ $engine = (new DefaultPresetRegistryFactory())->engine();
 $plan = $engine->plan(new ProjectOptions('billing', 'service', '/path/to/billing'));
 $result = (new ScaffoldWriter())->write('/path/to/billing', $plan);
 ```
+
+## Adding a new preset
+
+1. Implement `PresetDefinition` (id, metadata, runtime, plan).
+2. Register it in `DefaultPresetRegistryFactory`.
+3. Release `durin-presets`.
+
+No production changes are required in `durin-installer`, `durins-forge`, or `durin-app`.
 
 ## Dependency direction
 
@@ -71,16 +81,11 @@ Must not depend on `durin-architecture` or Durin Forge.
 
 ## Supported API
 
+- `PresetDefinition`, `PresetMetadata`, `RuntimeProfile`
 - `MinimalPreset`, `ServicePreset`, `WorkerPreset`
 - `PresetRegistry`, `PresetEngine`, `DefaultPresetRegistryFactory`
 - `ManifestPlanFactory`, `PresetScaffoldSupport`
 
-Canonical preset identifiers: `minimal`, `service`, `worker`.
+## Versioning
 
-## Versioning status
-
-Initial extraction release: **0.1.0** (pre-1.0).
-
-## Relationship to Durin Forge
-
-Forge CLI calls this package to resolve a preset and obtain a `ScaffoldPlan`, then applies it via `durin-core` mutation primitives.
+**0.2.0** — preset catalog as ecosystem SSOT (discovery + default + runtime metadata).

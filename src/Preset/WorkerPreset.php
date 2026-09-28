@@ -4,26 +4,57 @@ declare(strict_types=1);
 
 namespace EreborCodeForge\Durin\Presets\Preset;
 
-use EreborCodeForge\Durin\Core\Contract\Preset;
 use EreborCodeForge\Durin\Core\Contract\ProjectOptions;
 use EreborCodeForge\Durin\Core\Scaffold\ScaffoldPlan;
+use EreborCodeForge\Durin\Presets\Contract\PresetDefinition;
+use EreborCodeForge\Durin\Presets\Metadata\PresetMetadata;
+use EreborCodeForge\Durin\Presets\Metadata\RuntimeProfile;
 
 /**
  * Non-HTTP job / queue / scheduled worker preset (master §21, SPEC-DX-017).
  * Requires Mithril ^2.2 JobApplication + bin/job-worker (SPEC-MITHRIL-001).
  */
-final class WorkerPreset implements Preset
+final class WorkerPreset implements PresetDefinition
 {
     public function __construct(
         private readonly PresetScaffoldSupport $files = new PresetScaffoldSupport(),
     ) {}
 
-    public function name(): string
+    public function id(): string
     {
         return 'worker';
     }
 
+    public function name(): string
+    {
+        return $this->id();
+    }
+
+    public function metadata(): PresetMetadata
+    {
+        return new PresetMetadata(
+            id: $this->id(),
+            label: 'Worker',
+            description: 'Background worker',
+            category: 'worker',
+            capabilities: ['messaging', 'jobs'],
+        );
+    }
+
+    public function runtime(): RuntimeProfile
+    {
+        return new RuntimeProfile(
+            mode: 'worker',
+            capabilities: ['messaging'],
+        );
+    }
+
     public function scaffold(ProjectOptions $options): ScaffoldPlan
+    {
+        return $this->plan($options);
+    }
+
+    public function plan(ProjectOptions $options): ScaffoldPlan
     {
         $plan = new ScaffoldPlan();
         $app = $options->name;
@@ -31,7 +62,7 @@ final class WorkerPreset implements Preset
 
         $workerOptions = new ProjectOptions(
             name: $options->name,
-            preset: 'worker',
+            preset: $this->id(),
             targetDirectory: $options->targetDirectory,
             runtimeEngine: $options->runtimeEngine,
             runtimeServer: 'none',

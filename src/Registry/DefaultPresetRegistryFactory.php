@@ -9,13 +9,16 @@ use EreborCodeForge\Durin\Presets\Preset\ServicePreset;
 use EreborCodeForge\Durin\Presets\Preset\WorkerPreset;
 
 /**
- * Builds the default registry of shipped presets.
+ * Composition point for shipped presets. Only this package knows built-in IDs
+ * and the ecosystem default preset id.
  */
 final class DefaultPresetRegistryFactory
 {
+    private const string DEFAULT_ID = 'minimal';
+
     public function create(): PresetRegistry
     {
-        $registry = new PresetRegistry();
+        $registry = new PresetRegistry(defaultId: self::DEFAULT_ID);
         $registry->register(new MinimalPreset());
         $registry->register(new ServicePreset());
         $registry->register(new WorkerPreset());

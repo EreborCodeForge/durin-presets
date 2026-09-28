@@ -3,7 +3,7 @@
   "description": "Architecture presets and project-shape policies for Durin.",
   "type": "library",
   "license": "MIT",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "authors": [
     {
       "name": "Thales Ruppenthal",
@@ -28,12 +28,12 @@
   ],
   "autoload": {
     "psr-4": {
-      "EreborCodeForge\\Durin\\Presets\\": "src/"
+      "EreborCodeForge\Durin\Presets\\": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "EreborCodeForge\\Durin\\Presets\\Tests\\": "tests/"
+      "EreborCodeForge\Durin\Presets\Tests\\": "tests/"
     }
   },
   "scripts": {

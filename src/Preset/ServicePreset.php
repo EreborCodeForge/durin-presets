@@ -4,35 +4,62 @@ declare(strict_types=1);
 
 namespace EreborCodeForge\Durin\Presets\Preset;
 
-use EreborCodeForge\Durin\Core\Contract\Preset;
 use EreborCodeForge\Durin\Core\Contract\ProjectOptions;
 use EreborCodeForge\Durin\Core\Scaffold\ScaffoldPlan;
+use EreborCodeForge\Durin\Presets\Contract\PresetDefinition;
+use EreborCodeForge\Durin\Presets\Metadata\PresetMetadata;
+use EreborCodeForge\Durin\Presets\Metadata\RuntimeProfile;
 
 /**
  * General-purpose backend service preset (master §18).
  * Layer roots only — no empty Entity/Repository ceremony trees.
  */
-final class ServicePreset implements Preset
+final class ServicePreset implements PresetDefinition
 {
     public function __construct(
         private readonly PresetScaffoldSupport $files = new PresetScaffoldSupport(),
     ) {}
 
-    public function name(): string
+    public function id(): string
     {
         return 'service';
     }
 
+    public function name(): string
+    {
+        return $this->id();
+    }
+
+    public function metadata(): PresetMetadata
+    {
+        return new PresetMetadata(
+            id: $this->id(),
+            label: 'Service',
+            description: 'General-purpose structured backend service',
+            category: 'service',
+            capabilities: ['http', 'dependency-injection', 'persistence-ready'],
+        );
+    }
+
+    public function runtime(): RuntimeProfile
+    {
+        return new RuntimeProfile(mode: 'http');
+    }
+
     public function scaffold(ProjectOptions $options): ScaffoldPlan
+    {
+        return $this->plan($options);
+    }
+
+    public function plan(ProjectOptions $options): ScaffoldPlan
     {
         $plan = new ScaffoldPlan();
         $app = $options->name;
         $package = $this->files->composerPackageName($app);
 
-        // Align options for service-oriented manifest defaults.
         $serviceOptions = new ProjectOptions(
             name: $options->name,
-            preset: 'service',
+            preset: $this->id(),
             targetDirectory: $options->targetDirectory,
             runtimeEngine: $options->runtimeEngine,
             runtimeServer: $options->runtimeServer,

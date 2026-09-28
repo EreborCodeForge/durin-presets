@@ -6,10 +6,11 @@ namespace EreborCodeForge\Durin\Presets\Registry;
 
 use EreborCodeForge\Durin\Core\Contract\ProjectOptions;
 use EreborCodeForge\Durin\Core\Scaffold\ScaffoldPlan;
+use EreborCodeForge\Durin\Presets\Contract\PresetDefinition;
 use EreborCodeForge\Durin\Presets\Preset\ManifestPlanFactory;
 
 /**
- * Resolves a preset by name and returns a ScaffoldPlan (no filesystem writes).
+ * Resolves a preset and returns a ScaffoldPlan (no filesystem writes).
  */
 final class PresetEngine
 {
@@ -26,9 +27,10 @@ final class PresetEngine
     public function plan(ProjectOptions $options): ScaffoldPlan
     {
         $preset = $this->registry->get($options->preset);
-        $plan = $preset->scaffold($options);
+        $plan = $preset instanceof PresetDefinition
+            ? $preset->plan($options)
+            : $preset->scaffold($options);
 
-        // Ensure every preset plan includes a coherent durin.yaml unless already planned.
         if (!$this->planHasDurinYaml($plan)) {
             $this->manifestFactory->appendManifest($plan, $options);
         }

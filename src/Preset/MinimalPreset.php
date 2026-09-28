@@ -4,25 +4,53 @@ declare(strict_types=1);
 
 namespace EreborCodeForge\Durin\Presets\Preset;
 
-use EreborCodeForge\Durin\Core\Contract\Preset;
 use EreborCodeForge\Durin\Core\Contract\ProjectOptions;
 use EreborCodeForge\Durin\Core\Scaffold\ScaffoldPlan;
+use EreborCodeForge\Durin\Presets\Contract\PresetDefinition;
+use EreborCodeForge\Durin\Presets\Metadata\PresetMetadata;
+use EreborCodeForge\Durin\Presets\Metadata\RuntimeProfile;
 
 /**
  * Small HTTP API / webhook preset (master §17). No Domain ceremony.
  */
-final class MinimalPreset implements Preset
+final class MinimalPreset implements PresetDefinition
 {
     public function __construct(
         private readonly PresetScaffoldSupport $files = new PresetScaffoldSupport(),
     ) {}
 
-    public function name(): string
+    public function id(): string
     {
         return 'minimal';
     }
 
+    public function name(): string
+    {
+        return $this->id();
+    }
+
+    public function metadata(): PresetMetadata
+    {
+        return new PresetMetadata(
+            id: $this->id(),
+            label: 'Minimal',
+            description: 'Minimal application',
+            category: 'application',
+            capabilities: ['http'],
+        );
+    }
+
+    public function runtime(): RuntimeProfile
+    {
+        return new RuntimeProfile(mode: 'http');
+    }
+
     public function scaffold(ProjectOptions $options): ScaffoldPlan
+    {
+        return $this->plan($options);
+    }
+
+    public function plan(ProjectOptions $options): ScaffoldPlan
     {
         $plan = new ScaffoldPlan();
         $app = $options->name;
