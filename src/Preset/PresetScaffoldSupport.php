@@ -256,7 +256,7 @@ PHP;
                 'php' => '^8.5',
                 'ext-msgpack' => '*',
                 'ext-sockets' => '*',
-                'ereborcodeforge/durins-forge' => '^0.1',
+                'ereborcodeforge/durins-forge' => '^0.4',
             ],
             'require-dev' => [
                 'phpunit/phpunit' => '^12.5',
@@ -274,7 +274,7 @@ PHP;
             'extra' => [
                 'mithril' => [
                     'kernel' => 'App\\Kernel',
-                    'eregion' => 'v0.3.0',
+                    'eregion' => 'v0.4.0',
                     'eregion_repo' => 'EreborCodeForge/eregion',
                 ],
             ],
@@ -296,7 +296,7 @@ PHP;
                 'php' => '^8.5',
                 'ext-msgpack' => '*',
                 'ext-sockets' => '*',
-                'ereborcodeforge/durins-forge' => '^0.1',
+                'ereborcodeforge/durins-forge' => '^0.4',
             ],
             'require-dev' => [
                 'phpunit/phpunit' => '^12.5',

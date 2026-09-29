@@ -65,7 +65,7 @@ final class WorkerPresetTest extends TestCase
 
         $composer = json_decode((string) file_get_contents($target . '/composer.json'), true);
         $this->assertSame('App\\JobKernel', $composer['extra']['mithril']['job_kernel']);
-        $this->assertSame('^0.1', $composer['require']['ereborcodeforge/durins-forge']);
+        $this->assertSame('^0.4', $composer['require']['ereborcodeforge/durins-forge']);
         $this->assertArrayNotHasKey('ereborcodeforge/mithrilphp', $composer['require']);
         $this->assertGeneratedComposerRepositories($composer);
 
