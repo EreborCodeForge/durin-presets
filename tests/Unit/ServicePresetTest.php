@@ -64,6 +64,22 @@ final class ServicePresetTest extends TestCase
         $manifest = (new DurinManifestParser())->parseFile($target . '/durin.yaml');
         $this->assertSame('service', $manifest->preset);
         $this->assertSame('billing', $manifest->applicationName);
+        $this->assertFalse($manifest->isResolved());
+        $this->assertNull($manifest->runtime);
+
+        $composer = json_decode((string) file_get_contents($target . '/composer.json'), true);
+        $this->assertSame('App\\Kernel', $composer['extra']['mithril']['kernel']);
+        $this->assertArrayNotHasKey('eregion', $composer['extra']['mithril']);
+        $this->assertArrayNotHasKey('eregion_repo', $composer['extra']['mithril']);
+
+        $yaml = (string) file_get_contents($target . '/durin.yaml');
+        $this->assertStringContainsString('state: unresolved', $yaml);
+        $this->assertStringNotContainsString('server: eregion', $yaml);
+        $this->assertStringNotContainsString('supervisor: eregion', $yaml);
+        $this->assertStringNotContainsString('runtimeServer', $yaml);
+
+        $readme = (string) file_get_contents($target . '/README.md');
+        $this->assertStringContainsString('vendor/bin/durin run', $readme);
     }
 
     public function test_service_is_registered_in_default_registry(): void

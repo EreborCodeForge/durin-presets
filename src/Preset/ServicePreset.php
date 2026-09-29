@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace EreborCodeForge\Durin\Presets\Preset;
 
 use EreborCodeForge\Durin\Core\Contract\ProjectOptions;
-use EreborCodeForge\Durin\Core\Runtime\RuntimeIntent;
 use EreborCodeForge\Durin\Core\Scaffold\ScaffoldPlan;
 use EreborCodeForge\Durin\Presets\Contract\PresetDefinition;
 use EreborCodeForge\Durin\Presets\Metadata\PresetMetadata;
@@ -65,7 +64,6 @@ final class ServicePreset implements PresetDefinition
             name: $options->name,
             preset: $this->id(),
             targetDirectory: $options->targetDirectory,
-            runtime: new RuntimeIntent(mode: 'http', capabilities: ['persistent-http']),
             http: true,
             messaging: false,
             modules: false,

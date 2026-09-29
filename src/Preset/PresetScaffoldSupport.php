@@ -129,7 +129,7 @@ PHP;
 declare(strict_types=1);
 
 /**
- * {$label} Durin app — Eregion worker entry via Mithril HttpApplication.
+ * {$label} Durin app — HTTP CLI entry via Mithril HttpApplication.
  */
 
 \$appRoot = dirname(__DIR__);
@@ -156,7 +156,7 @@ if (PHP_SAPI !== 'cli') {
     header('Content-Type: application/json');
     echo json_encode([
         'error' => true,
-        'message' => 'HTTP entry is Eregion. Run: vendor/bin/durin serve',
+        'message' => 'HTTP entry is CLI-only. Run: vendor/bin/durin run',
     ]);
     exit(1);
 }
@@ -274,8 +274,6 @@ PHP;
             'extra' => [
                 'mithril' => [
                     'kernel' => 'App\\Kernel',
-                    'eregion' => 'v0.4.0',
-                    'eregion_repo' => 'EreborCodeForge/eregion',
                 ],
             ],
             'scripts' => [
@@ -425,12 +423,24 @@ Created with `durin new` preset **worker** (job / non-HTTP).
 composer install
 cp .env.example .env
 # bind a real JobTransport in JobKernel::boot()
-php vendor/bin/job-worker
-# or: composer job:work
+vendor/bin/durin run
 vendor/bin/durin doctor
 ```
 
-This app does **not** use Eregion. See Mithril job-worker docs and Durin SPEC-DX-017.
+This worker runs standalone with Mithril by default.
+Eregion is optional and may supervise the worker when configured by Durin.
+
+- **Mithril** executes the JobWorker.
+- **Eregion** optionally supervises processes.
+
+Low-level / debug execution (not the primary Durin UX):
+
+```bash
+php vendor/bin/job-worker
+# or: composer job:work
+```
+
+See Mithril job-worker docs and Durin SPEC-DX-017.
 
 Structure:
 
@@ -459,8 +469,8 @@ Created with `durin new` preset **{$preset}**.
 ```bash
 composer install
 cp .env.example .env
+vendor/bin/durin run
 vendor/bin/durin doctor
-vendor/bin/durin dev
 ```
 
 Structure:

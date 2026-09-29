@@ -67,7 +67,25 @@ final class WorkerPresetTest extends TestCase
         $this->assertSame('App\\JobKernel', $composer['extra']['mithril']['job_kernel']);
         $this->assertSame('^0.4', $composer['require']['ereborcodeforge/durins-forge']);
         $this->assertArrayNotHasKey('ereborcodeforge/mithrilphp', $composer['require']);
+        $this->assertArrayNotHasKey('eregion', $composer['extra']['mithril'] ?? []);
+        $this->assertArrayNotHasKey('eregion_repo', $composer['extra']['mithril'] ?? []);
         $this->assertGeneratedComposerRepositories($composer);
+
+        $yaml = (string) file_get_contents($target . '/durin.yaml');
+        $this->assertStringContainsString('state: unresolved', $yaml);
+        $this->assertStringNotContainsString('server: eregion', $yaml);
+        $this->assertStringNotContainsString('supervisor: eregion', $yaml);
+        $this->assertStringNotContainsString('runtimeServer', $yaml);
+
+        $readme = (string) file_get_contents($target . '/README.md');
+        $this->assertStringContainsString('vendor/bin/durin run', $readme);
+        $this->assertStringContainsString('Eregion is optional', $readme);
+        $this->assertStringNotContainsString('does not use Eregion', $readme);
+        $this->assertMatchesRegularExpression(
+            '/vendor\/bin\/durin run[\s\S]*php vendor\/bin\/job-worker/s',
+            $readme,
+            'durin run must be the primary entry; job-worker remains a low-level option',
+        );
 
         $kernel = (string) file_get_contents($target . '/src/JobKernel.php');
         $this->assertStringContainsString('implements JobApplication', $kernel);

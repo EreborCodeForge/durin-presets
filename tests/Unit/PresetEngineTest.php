@@ -129,5 +129,10 @@ final class PresetEngineTest extends TestCase
         $this->assertTrue($manifest->architecture['modules']);
         $this->assertFalse($manifest->isResolved());
         $this->assertNull($manifest->runtime);
+        $this->assertSame(['state' => 'unresolved'], $manifest->toArray()['runtime']);
+        $this->assertStringNotContainsString('server:', $manifest->toYaml());
+        $this->assertStringNotContainsString('supervisor:', $manifest->toYaml());
+        $this->assertStringNotContainsString('engine:', $manifest->toYaml());
+        $this->assertStringNotContainsString('execution:', $manifest->toYaml());
     }
 }
