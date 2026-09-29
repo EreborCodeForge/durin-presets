@@ -5,6 +5,8 @@
 Single source of truth for Durin application presets: catalog, metadata, runtime
 requirements, and scaffold planning.
 
+Runtime requirements spec: [`docs/runtime-requirements-spec.md`](docs/runtime-requirements-spec.md). Cross-repo integration: [`durin-architecture` master spec](https://github.com/EreborCodeForge/durin-architecture/blob/main/docs/specs/durin-workloads-integration-master-spec.md).
+
 ## What this package owns
 
 - Built-in presets: `minimal`, `service`, `worker`
