@@ -11,6 +11,7 @@ use EreborCodeForge\Durin\Core\Scaffold\ScaffoldPlan;
 /**
  * Helpers to attach durin.yaml (and related metadata) to a ScaffoldPlan.
  * Presets must not write files themselves — only plan.
+ * Runtime stays unresolved; Forge resolves engine/execution/supervisor.
  */
 final class ManifestPlanFactory
 {
@@ -19,9 +20,6 @@ final class ManifestPlanFactory
         return new DurinManifest(
             applicationName: $options->name,
             preset: $options->preset,
-            runtimeEngine: $options->runtimeEngine,
-            runtimeServer: $options->runtimeServer,
-            runtimeMode: $options->runtimeMode,
             features: [
                 'http' => $options->http,
                 'messaging' => $options->messaging,
@@ -29,6 +27,7 @@ final class ManifestPlanFactory
             architecture: [
                 'modules' => $options->modules,
             ],
+            runtime: null,
         );
     }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace EreborCodeForge\Durin\Presets\Preset;
 
 use EreborCodeForge\Durin\Core\Contract\ProjectOptions;
+use EreborCodeForge\Durin\Core\Runtime\RuntimeIntent;
 use EreborCodeForge\Durin\Core\Scaffold\ScaffoldPlan;
 use EreborCodeForge\Durin\Presets\Contract\PresetDefinition;
 use EreborCodeForge\Durin\Presets\Metadata\PresetMetadata;
@@ -64,9 +65,7 @@ final class WorkerPreset implements PresetDefinition
             name: $options->name,
             preset: $this->id(),
             targetDirectory: $options->targetDirectory,
-            runtimeEngine: $options->runtimeEngine,
-            runtimeServer: 'none',
-            runtimeMode: 'job',
+            runtime: new RuntimeIntent(mode: 'job', capabilities: ['job-loop', 'messaging']),
             http: false,
             messaging: true,
             modules: false,

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace EreborCodeForge\Durin\Presets\Preset;
 
 use EreborCodeForge\Durin\Core\Contract\ProjectOptions;
+use EreborCodeForge\Durin\Core\Runtime\RuntimeIntent;
 use EreborCodeForge\Durin\Core\Scaffold\ScaffoldPlan;
 use EreborCodeForge\Durin\Presets\Contract\PresetDefinition;
 use EreborCodeForge\Durin\Presets\Metadata\PresetMetadata;
@@ -59,6 +60,17 @@ final class MinimalPreset implements PresetDefinition
         $app = $options->name;
         $package = $this->files->composerPackageName($app);
 
+        $minimalOptions = new ProjectOptions(
+            name: $options->name,
+            preset: $this->id(),
+            targetDirectory: $options->targetDirectory,
+            runtime: new RuntimeIntent(mode: 'http', capabilities: ['persistent-http']),
+            http: true,
+            messaging: false,
+            modules: false,
+            extra: $options->extra,
+        );
+
         $plan
             ->directory('src/Http')
             ->directory('src/Application')
@@ -86,7 +98,7 @@ final class MinimalPreset implements PresetDefinition
                 'tests',
             ]));
 
-        (new ManifestPlanFactory())->appendManifest($plan, $options);
+        (new ManifestPlanFactory())->appendManifest($plan, $minimalOptions);
 
         return $plan;
     }

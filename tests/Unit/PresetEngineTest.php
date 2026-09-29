@@ -127,5 +127,7 @@ final class PresetEngineTest extends TestCase
         $manifest = (new ManifestPlanFactory())->forOptions($options);
         $this->assertSame('billing', $manifest->applicationName);
         $this->assertTrue($manifest->architecture['modules']);
+        $this->assertFalse($manifest->isResolved());
+        $this->assertNull($manifest->runtime);
     }
 }
