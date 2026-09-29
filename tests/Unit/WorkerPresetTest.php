@@ -71,7 +71,7 @@ final class WorkerPresetTest extends TestCase
 
         $kernel = (string) file_get_contents($target . '/src/JobKernel.php');
         $this->assertStringContainsString('implements JobApplication', $kernel);
-        $this->assertStringContainsString('InMemoryJobTransport', $kernel);
+        $this->assertStringContainsString('idleWhenEmpty: true', $kernel);
     }
 
     public function test_worker_is_registered(): void

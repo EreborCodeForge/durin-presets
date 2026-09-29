@@ -3,7 +3,7 @@
     "description": "Architecture presets and project-shape policies for Durin.",
     "type": "library",
     "license": "MIT",
-    "version": "0.3.2",
+    "version": "0.3.3",
     "authors": [
         {
             "name": "Thales Ruppenthal",
