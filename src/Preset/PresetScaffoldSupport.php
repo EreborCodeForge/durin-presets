@@ -362,12 +362,16 @@ final class JobKernel implements JobApplication
 
         // Demo transport — idleWhenEmpty keeps the consumer persistent until stop/drain.
         \$this->container->singleton(JobTransport::class, new InMemoryJobTransport([], idleWhenEmpty: true));
+        \$this->container->scoped(JobUnitCleanup::class, static fn (): JobUnitCleanup => new JobUnitCleanup());
 
         \$this->booted = true;
     }
 
     public function handle(JobEnvelope \$job): JobResult
     {
+        // Materialize the scoped cleanup so endScope runs it after this job.
+        \$this->container->get(JobUnitCleanup::class);
+
         // Dispatch by \$job->name into src/Jobs handlers.
         return JobResult::ack();
     }
@@ -375,6 +379,25 @@ final class JobKernel implements JobApplication
     public function getContainer(): Container
     {
         return \$this->container;
+    }
+}
+
+/**
+ * Ends the database unit after the job. Does not open a connection by itself.
+ */
+final class JobUnitCleanup
+{
+    public function cleanup(): void
+    {
+        if (!class_exists(\\EreborCodeForge\\Durin\\Forge\\Infrastructure\\Database\\DB::class)) {
+            return;
+        }
+
+        if (!\\EreborCodeForge\\Durin\\Forge\\Infrastructure\\Database\\DB::isBooted()) {
+            return;
+        }
+
+        \\EreborCodeForge\\Durin\\Forge\\Infrastructure\\Database\\DB::onRequestEnd();
     }
 }
 

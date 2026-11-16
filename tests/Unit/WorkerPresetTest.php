@@ -90,6 +90,9 @@ final class WorkerPresetTest extends TestCase
         $kernel = (string) file_get_contents($target . '/src/JobKernel.php');
         $this->assertStringContainsString('implements JobApplication', $kernel);
         $this->assertStringContainsString('idleWhenEmpty: true', $kernel);
+        $this->assertStringContainsString('DB::isBooted()', $kernel);
+        $this->assertStringContainsString('DB::onRequestEnd()', $kernel);
+        $this->assertStringNotContainsString('DB::reset()', $kernel);
     }
 
     public function test_worker_is_registered(): void
