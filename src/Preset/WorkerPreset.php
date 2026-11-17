@@ -56,48 +56,21 @@ final class WorkerPreset implements PresetDefinition
 
     public function plan(ProjectOptions $options): ScaffoldPlan
     {
-        $plan = new ScaffoldPlan();
         $app = $options->name;
-        $package = $this->files->composerPackageName($app);
 
-        $workerOptions = new ProjectOptions(
-            name: $options->name,
-            preset: $this->id(),
-            targetDirectory: $options->targetDirectory,
-            http: false,
-            messaging: true,
-            modules: false,
-            extra: $options->extra,
-        );
-
-        $plan
-            ->directory('src')
-            ->directory('src/Application')
-            ->directory('src/Infrastructure')
-            ->directory('src/Jobs')
-            ->directory('config')
-            ->directory('tests')
-            ->directory('var/cache')
-            ->directory('var/runtime')
-            ->file('src/Application/.gitkeep', '')
-            ->file('src/Infrastructure/.gitkeep', '')
-            ->file('src/Jobs/.gitkeep', '')
-            ->file('src/JobKernel.php', $this->files->jobKernel($app))
-            ->file('config/app.php', $this->files->configApp($app))
-            ->file('tests/ExampleTest.php', $this->files->exampleTest())
-            ->file('composer.json', $this->files->composerJsonWorker($package))
-            ->file('.env.example', $this->files->envExampleWorker())
-            ->file('README.md', $this->files->readmeWorker($app, [
+        return (new JobApplicationLayout($this->files))->plan(
+            options: $options,
+            presetId: $this->id(),
+            jobKernel: $this->files->jobKernel($app),
+            readme: $this->files->readmeWorker($app, [
                 'src/JobKernel.php',
                 'src/Application',
                 'src/Infrastructure',
                 'src/Jobs',
                 'config',
                 'tests',
-            ]));
-
-        (new ManifestPlanFactory())->appendManifest($plan, $workerOptions);
-
-        return $plan;
+            ]),
+            envExample: $this->files->envExampleWorker(),
+        );
     }
 }

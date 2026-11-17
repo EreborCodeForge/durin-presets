@@ -15,10 +15,14 @@ final class BuiltInPresetCatalogTest extends TestCase
         $catalog = (new DefaultPresetRegistryFactory())->create()->catalog();
 
         $this->assertSame('minimal', $catalog['default']);
-        $this->assertCount(3, $catalog['presets']);
+        $this->assertCount(5, $catalog['presets']);
         $this->assertSame(
-            ['minimal', 'service', 'worker'],
+            ['minimal', 'service', 'worker', 'consumer', 'producer'],
             array_column($catalog['presets'], 'id'),
+        );
+        $this->assertSame(
+            ['consumer', 'producer'],
+            array_column($catalog['capabilities'], 'id'),
         );
 
         $byId = [];
@@ -38,6 +42,15 @@ final class BuiltInPresetCatalogTest extends TestCase
         $this->assertSame(['job-loop', 'messaging'], $byId['worker']['runtime']['required_capabilities']);
         $this->assertNull($byId['worker']['runtime']['preferred_runner']);
 
+        $this->assertSame('job', $byId['consumer']['runtime']['mode']);
+        $this->assertSame(['job-loop', 'messaging'], $byId['consumer']['runtime']['required_capabilities']);
+        $this->assertNotContains('consumer', $byId['consumer']['runtime']['required_capabilities']);
+        $this->assertNull($byId['consumer']['runtime']['preferred_runner']);
+
+        $this->assertSame('http', $byId['producer']['runtime']['mode']);
+        $this->assertSame(['persistent-http'], $byId['producer']['runtime']['required_capabilities']);
+        $this->assertNull($byId['producer']['runtime']['preferred_runner']);
+
         $encoded = json_encode($catalog, JSON_THROW_ON_ERROR);
         $decoded = json_decode($encoded, true, 512, JSON_THROW_ON_ERROR);
         $this->assertSame($catalog, $decoded);
@@ -47,7 +60,7 @@ final class BuiltInPresetCatalogTest extends TestCase
     {
         $engine = (new DefaultPresetRegistryFactory())->engine();
 
-        foreach (['minimal', 'service', 'worker'] as $id) {
+        foreach (['minimal', 'service', 'worker', 'consumer', 'producer'] as $id) {
             $plan = $engine->plan(new ProjectOptions('demo', $id, '/tmp/demo'));
             $paths = array_map(static fn ($a) => $a->relativePath, $plan->actions());
             $this->assertContains('durin.yaml', $paths, "preset {$id} must plan durin.yaml");

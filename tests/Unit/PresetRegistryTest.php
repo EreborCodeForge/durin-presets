@@ -16,8 +16,8 @@ final class PresetRegistryTest extends TestCase
         $registry = (new DefaultPresetRegistryFactory())->create();
         $ids = $registry->ids();
 
-        $this->assertSame(['minimal', 'service', 'worker'], $ids);
-        $this->assertCount(3, $registry->all());
+        $this->assertSame(['minimal', 'service', 'worker', 'consumer', 'producer'], $ids);
+        $this->assertCount(5, $registry->all());
         $this->assertTrue($registry->has('service'));
     }
 
@@ -35,7 +35,7 @@ final class PresetRegistryTest extends TestCase
         $registry = (new DefaultPresetRegistryFactory())->create();
 
         $this->expectException(UnknownPresetException::class);
-        $this->expectExceptionMessage('Available: minimal, service, worker');
+        $this->expectExceptionMessage('Available: minimal, service, worker, consumer, producer');
 
         $registry->get('missing');
     }

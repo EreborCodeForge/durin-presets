@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace EreborCodeForge\Durin\Presets\Registry;
 
+use EreborCodeForge\Durin\Presets\Preset\ConsumerPreset;
 use EreborCodeForge\Durin\Presets\Preset\MinimalPreset;
+use EreborCodeForge\Durin\Presets\Preset\ProducerPreset;
 use EreborCodeForge\Durin\Presets\Preset\ServicePreset;
 use EreborCodeForge\Durin\Presets\Preset\WorkerPreset;
 
@@ -22,6 +24,8 @@ final class DefaultPresetRegistryFactory
         $registry->register(new MinimalPreset());
         $registry->register(new ServicePreset());
         $registry->register(new WorkerPreset());
+        $registry->register(new ConsumerPreset());
+        $registry->register(new ProducerPreset());
 
         return $registry;
     }

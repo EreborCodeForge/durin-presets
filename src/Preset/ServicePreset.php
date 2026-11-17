@@ -56,44 +56,13 @@ final class ServicePreset implements PresetDefinition
 
     public function plan(ProjectOptions $options): ScaffoldPlan
     {
-        $plan = new ScaffoldPlan();
         $app = $options->name;
-        $package = $this->files->composerPackageName($app);
 
-        $serviceOptions = new ProjectOptions(
-            name: $options->name,
-            preset: $this->id(),
-            targetDirectory: $options->targetDirectory,
-            http: true,
+        return (new HttpServiceLayout($this->files))->plan(
+            options: $options,
+            presetId: $this->id(),
             messaging: false,
-            modules: false,
-            extra: $options->extra,
-        );
-
-        $plan
-            ->directory('src/Domain')
-            ->directory('src/Application')
-            ->directory('src/Infrastructure')
-            ->directory('src/Presentation')
-            ->directory('routes')
-            ->directory('config')
-            ->directory('tests')
-            ->directory('public')
-            ->directory('var/cache')
-            ->directory('var/runtime')
-            ->file('src/Domain/.gitkeep', '')
-            ->file('src/Application/.gitkeep', '')
-            ->file('src/Infrastructure/.gitkeep', '')
-            ->file('src/Presentation/.gitkeep', '')
-            ->file('routes/api.php', $this->files->routesApi())
-            ->file('routes/web.php', $this->files->routesWeb())
-            ->file('config/app.php', $this->files->configApp($app))
-            ->file('src/Kernel.php', $this->files->applicationKernel())
-            ->file('public/index.php', $this->files->publicIndex('Service'))
-            ->file('tests/ExampleTest.php', $this->files->exampleTest())
-            ->file('composer.json', $this->files->composerJson($package))
-            ->file('.env.example', $this->files->envExample())
-            ->file('README.md', $this->files->readme($app, 'service', [
+            readme: $this->files->readme($app, 'service', [
                 'src/Domain',
                 'src/Application',
                 'src/Infrastructure',
@@ -101,10 +70,9 @@ final class ServicePreset implements PresetDefinition
                 'routes',
                 'config',
                 'tests',
-            ]));
-
-        (new ManifestPlanFactory())->appendManifest($plan, $serviceOptions);
-
-        return $plan;
+            ]),
+            envExample: $this->files->envExample(),
+            indexLabel: 'Service',
+        );
     }
 }

@@ -6,6 +6,7 @@ namespace EreborCodeForge\Durin\Presets\Registry;
 
 use EreborCodeForge\Durin\Core\Contract\Preset;
 use EreborCodeForge\Durin\Core\Contract\PresetRegistry as PresetRegistryContract;
+use EreborCodeForge\Durin\Presets\Capability\CapabilityCatalog;
 use EreborCodeForge\Durin\Presets\Contract\PresetDefinition;
 use EreborCodeForge\Durin\Presets\Preset\UnknownPresetException;
 
@@ -102,7 +103,7 @@ final class PresetRegistry implements PresetRegistryContract
     /**
      * Deterministic catalog payload for installer / Forge JSON output.
      *
-     * @return array{default: ?string, presets: list<array<string, mixed>>}
+     * @return array{default: ?string, presets: list<array<string, mixed>>, capabilities: list<array<string, mixed>>}
      */
     public function catalog(): array
     {
@@ -117,6 +118,7 @@ final class PresetRegistry implements PresetRegistryContract
         return [
             'default' => $this->defaultId,
             'presets' => $presets,
+            'capabilities' => (new CapabilityCatalog())->toArray(),
         ];
     }
 }

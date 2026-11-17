@@ -425,6 +425,269 @@ APP_DEBUG=true
 ENV;
     }
 
+    public function envExampleConsumer(): string
+    {
+        return <<<'ENV'
+APP_ENV=development
+APP_DEBUG=true
+# Opt-in. Leave unset until a real JobTransport adapter is bound.
+# The in-memory transport is used only when APP_ENV is development or testing.
+# MESSAGING_TRANSPORT=
+
+ENV;
+    }
+
+    public function envExampleProducer(): string
+    {
+        return <<<'ENV'
+APP_ENV=development
+APP_DEBUG=true
+APP_URL=http://127.0.0.1:8080
+APP_PORT=8080
+# Opt-in. Leave unset until a real publisher adapter is bound.
+# MESSAGING_TRANSPORT=
+
+ENV;
+    }
+
+    public function messagingConfig(): string
+    {
+        return <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Opt-in messaging configuration.
+ * No broker is installed by this scaffold.
+ * Publishing without a bound adapter must fail closed.
+ * Consuming without a bound JobTransport must fail closed outside development and testing.
+ */
+return [
+    'transport' => getenv('MESSAGING_TRANSPORT') ?: null,
+];
+
+PHP;
+    }
+
+    public function exampleHandler(): string
+    {
+        return <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace App\Application\Handlers;
+
+use Erebor\Mithril\Jobs\JobEnvelope;
+use Erebor\Mithril\Jobs\JobResult;
+
+/**
+ * Example consumer handler. It does not acknowledge jobs.
+ * Replace it with a handler that returns an explicit JobResult after real processing.
+ */
+final class ExampleHandler
+{
+    public function handle(JobEnvelope $job): JobResult
+    {
+        throw new \RuntimeException(
+            'ExampleHandler refuses to acknowledge this job. Replace App\\Application\\Handlers\\ExampleHandler with a handler that returns an explicit JobResult after real processing.'
+        );
+    }
+}
+
+PHP;
+    }
+
+    public function consumerScaffoldTest(): string
+    {
+        return <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class ConsumerScaffoldTest extends TestCase
+{
+    public function test_example_handler_does_not_acknowledge(): void
+    {
+        $source = (string) file_get_contents(dirname(__DIR__) . '/src/Application/Handlers/ExampleHandler.php');
+
+        $this->assertStringContainsString('refuses to acknowledge', $source);
+        $this->assertStringNotContainsString('JobResult::ack()', $source);
+    }
+}
+
+PHP;
+    }
+
+    public function eventEnvelope(): string
+    {
+        return <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace App\Infrastructure\Messaging;
+
+/**
+ * Application-level event. Transport concerns stay in the publisher adapter.
+ */
+final readonly class EventEnvelope
+{
+    /**
+     * @param array<string, mixed> $payload
+     */
+    public function __construct(
+        public string $name,
+        public array $payload = [],
+    ) {}
+}
+
+PHP;
+    }
+
+    public function publisherContract(): string
+    {
+        return <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace App\Infrastructure\Messaging;
+
+interface Publisher
+{
+    public function publish(EventEnvelope $event): void;
+}
+
+PHP;
+    }
+
+    public function unconfiguredPublisher(): string
+    {
+        return <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace App\Infrastructure\Messaging;
+
+/**
+ * Fail-closed publisher. This scaffold never reports a successful publish
+ * without a concrete adapter.
+ */
+final class UnconfiguredPublisher implements Publisher
+{
+    public function publish(EventEnvelope $event): void
+    {
+        throw new \RuntimeException(
+            'No messaging publisher adapter is configured. Bind App\\Infrastructure\\Messaging\\Publisher before publishing. This scaffold does not simulate a successful publish.'
+        );
+    }
+}
+
+PHP;
+    }
+
+    public function consumerJobKernel(string $app): string
+    {
+        return <<<PHP
+<?php
+
+declare(strict_types=1);
+
+namespace App;
+
+use App\\Application\\Handlers\\ExampleHandler;
+use Erebor\\Mithril\\Container;
+use Erebor\\Mithril\\Contracts\\JobApplication;
+use Erebor\\Mithril\\Jobs\\InMemoryJobTransport;
+use Erebor\\Mithril\\Jobs\\JobEnvelope;
+use Erebor\\Mithril\\Jobs\\JobResult;
+use Erebor\\Mithril\\Jobs\\JobTransport;
+
+/**
+ * Job application kernel for {$app}.
+ * Does not acknowledge jobs on its own and does not open a broker connection.
+ */
+final class JobKernel implements JobApplication
+{
+    private Container \$container;
+    private bool \$booted = false;
+
+    public function __construct()
+    {
+        \$this->container = new Container();
+    }
+
+    public function boot(): void
+    {
+        if (\$this->booted) {
+            return;
+        }
+
+        \$environment = getenv('APP_ENV');
+        \$environment = is_string(\$environment) && \$environment !== '' ? \$environment : 'production';
+        \$transport = getenv('MESSAGING_TRANSPORT');
+        \$transport = is_string(\$transport) ? trim(\$transport) : '';
+
+        if (\$transport !== '') {
+            throw new \\RuntimeException(
+                'MESSAGING_TRANSPORT is set but no JobTransport adapter is registered. Bind a real adapter before handling jobs. This scaffold does not connect to a broker.'
+            );
+        }
+
+        if (!in_array(\$environment, ['development', 'testing', 'test'], true)) {
+            throw new \\RuntimeException(
+                'Consumer transport is not configured. Set MESSAGING_TRANSPORT and bind a JobTransport adapter. The in-memory transport is only available when APP_ENV is development or testing.'
+            );
+        }
+
+        // Development and testing only. This is not a production broker.
+        \$this->container->singleton(JobTransport::class, new InMemoryJobTransport([], idleWhenEmpty: true));
+        \$this->container->singleton(ExampleHandler::class, static fn (): ExampleHandler => new ExampleHandler());
+        \$this->container->scoped(JobUnitCleanup::class, static fn (): JobUnitCleanup => new JobUnitCleanup());
+
+        \$this->booted = true;
+    }
+
+    public function handle(JobEnvelope \$job): JobResult
+    {
+        \$this->container->get(JobUnitCleanup::class);
+
+        return \$this->container->get(ExampleHandler::class)->handle(\$job);
+    }
+
+    public function getContainer(): Container
+    {
+        return \$this->container;
+    }
+}
+
+/**
+ * Ends the database unit after the job. Does not open a connection by itself.
+ */
+final class JobUnitCleanup
+{
+    public function cleanup(): void
+    {
+        if (!class_exists(\\EreborCodeForge\\Durin\\Forge\\Infrastructure\\Database\\DB::class)) {
+            return;
+        }
+
+        if (!\\EreborCodeForge\\Durin\\Forge\\Infrastructure\\Database\\DB::isBooted()) {
+            return;
+        }
+
+        \\EreborCodeForge\\Durin\\Forge\\Infrastructure\\Database\\DB::onRequestEnd();
+    }
+}
+
+PHP;
+    }
+
     /**
      * @param list<string> $structureLines
      */
@@ -486,6 +749,81 @@ MD;
 # {$app}
 
 Created with `durin new` preset **{$preset}**.
+
+## Next steps
+
+```bash
+composer install
+cp .env.example .env
+vendor/bin/durin run
+vendor/bin/durin doctor
+```
+
+Structure:
+
+{$structure}
+
+MD;
+    }
+
+    /**
+     * @param list<string> $structureLines
+     */
+    public function readmeConsumer(string $app, array $structureLines): string
+    {
+        $structure = implode("\n", array_map(
+            static fn (string $line): string => '- `' . $line . '`',
+            $structureLines,
+        ));
+
+        return <<<MD
+# {$app}
+
+Created with `durin new` preset **consumer** (job / non-HTTP).
+
+Execution is `mithril-job`. Eregion is optional and is not selected by this preset.
+No broker is installed. `JobKernel` does not acknowledge jobs. The example handler refuses to ack until you replace it.
+The in-memory transport is only for `APP_ENV=development` or `testing`.
+
+## Next steps
+
+```bash
+composer install
+cp .env.example .env
+vendor/bin/durin run
+vendor/bin/durin doctor
+```
+
+Low-level / debug execution (not the primary Durin UX):
+
+```bash
+php vendor/bin/job-worker
+```
+
+Structure:
+
+{$structure}
+
+MD;
+    }
+
+    /**
+     * @param list<string> $structureLines
+     */
+    public function readmeProducer(string $app, array $structureLines): string
+    {
+        $structure = implode("\n", array_map(
+            static fn (string $line): string => '- `' . $line . '`',
+            $structureLines,
+        ));
+
+        return <<<MD
+# {$app}
+
+Created with `durin new` preset **producer** (HTTP service with a publisher scaffold).
+
+Execution stays `mithril-http`. This preset does not add a public `/publish` route and does not install a broker.
+`UnconfiguredPublisher::publish()` fails until you bind a real `Publisher` adapter.
 
 ## Next steps
 

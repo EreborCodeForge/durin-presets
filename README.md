@@ -9,7 +9,8 @@ Runtime requirements spec: [`docs/runtime-requirements-spec.md`](docs/runtime-re
 
 ## What this package owns
 
-- Built-in presets: `minimal`, `service`, `worker`
+- Built-in presets: `minimal`, `service`, `worker`, `consumer`, `producer`
+- Composable capabilities: `consumer` (job presets only) and `producer` (HTTP and job presets)
 - Public discovery API (`PresetDefinition`, `PresetMetadata`, `RuntimeProfile`, `PresetRegistry`)
 - Default preset (`minimal`) — only here
 - Preset planning engine (`PresetEngine` → `ScaffoldPlan`)
@@ -42,11 +43,11 @@ use EreborCodeForge\Durin\Presets\Registry\DefaultPresetRegistryFactory;
 
 $registry = (new DefaultPresetRegistryFactory())->create();
 
-$registry->ids();           // ['minimal', 'service', 'worker']
+$registry->ids();           // ['minimal', 'service', 'worker', 'consumer', 'producer']
 $registry->default()->id(); // 'minimal'
 $registry->has('service');
 $registry->definition('service')->metadata()->toArray();
-$registry->catalog();       // { default, presets: [metadata + runtime] }
+$registry->catalog();       // { default, presets, capabilities }
 ```
 
 Installer and Forge may list/validate presets through this API only. They must not

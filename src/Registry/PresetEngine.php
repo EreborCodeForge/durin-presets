@@ -6,6 +6,8 @@ namespace EreborCodeForge\Durin\Presets\Registry;
 
 use EreborCodeForge\Durin\Core\Contract\ProjectOptions;
 use EreborCodeForge\Durin\Core\Scaffold\ScaffoldPlan;
+use EreborCodeForge\Durin\Presets\Capability\CapabilityCatalog;
+use EreborCodeForge\Durin\Presets\Capability\CapabilityScaffoldComposer;
 use EreborCodeForge\Durin\Presets\Contract\PresetDefinition;
 use EreborCodeForge\Durin\Presets\Preset\ManifestPlanFactory;
 
@@ -17,6 +19,8 @@ final class PresetEngine
     public function __construct(
         private readonly PresetRegistry $registry,
         private readonly ManifestPlanFactory $manifestFactory = new ManifestPlanFactory(),
+        private readonly CapabilityCatalog $capabilities = new CapabilityCatalog(),
+        private readonly CapabilityScaffoldComposer $composer = new CapabilityScaffoldComposer(),
     ) {}
 
     public function registry(): PresetRegistry
@@ -35,7 +39,16 @@ final class PresetEngine
             $this->manifestFactory->appendManifest($plan, $options);
         }
 
-        return $plan;
+        $with = $this->capabilities->normalize($options->extra['with'] ?? null);
+        if ($with === []) {
+            return $plan;
+        }
+
+        $mode = $preset instanceof PresetDefinition ? $preset->runtime()->mode : null;
+        $this->capabilities->assertCompatible($options->preset, $mode, $with);
+        $plan = $this->composer->merge($plan, $with);
+
+        return $this->composer->enableMessaging($plan);
     }
 
     private function planHasDurinYaml(ScaffoldPlan $plan): bool
