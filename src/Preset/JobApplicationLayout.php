@@ -38,6 +38,7 @@ final class JobApplicationLayout
             messaging: true,
             modules: false,
             extra: $options->extra,
+            selection: $options->selection,
         );
 
         $plan

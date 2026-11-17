@@ -98,6 +98,8 @@ final class CapabilityCatalogTest extends TestCase
         $manifest = (new DurinManifestParser())->parse($yaml);
         $this->assertTrue($manifest->features['http']);
         $this->assertTrue($manifest->features['messaging']);
+        $this->assertFalse($manifest->features['consumer']);
+        $this->assertTrue($manifest->features['producer']);
         $this->assertStringNotContainsString('/publish', $routes);
         $this->assertStringContainsString('does not simulate a successful publish', $publisher);
     }

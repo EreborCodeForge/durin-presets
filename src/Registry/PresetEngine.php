@@ -39,7 +39,8 @@ final class PresetEngine
             $this->manifestFactory->appendManifest($plan, $options);
         }
 
-        $with = $this->capabilities->normalize($options->extra['with'] ?? null);
+        $rawWith = $options->extra['with'] ?? $options->selection?->features;
+        $with = $this->capabilities->normalize($rawWith ?? null);
         if ($with === []) {
             return $plan;
         }
@@ -48,7 +49,7 @@ final class PresetEngine
         $this->capabilities->assertCompatible($options->preset, $mode, $with);
         $plan = $this->composer->merge($plan, $with);
 
-        return $this->composer->enableMessaging($plan);
+        return $this->composer->enableMessaging($plan, $with);
     }
 
     private function planHasDurinYaml(ScaffoldPlan $plan): bool

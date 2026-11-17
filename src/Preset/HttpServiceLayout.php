@@ -35,6 +35,7 @@ final class HttpServiceLayout
             messaging: $messaging,
             modules: false,
             extra: $options->extra,
+            selection: $options->selection,
         );
 
         $plan

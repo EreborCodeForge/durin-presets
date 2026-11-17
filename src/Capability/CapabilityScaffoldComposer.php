@@ -45,7 +45,10 @@ final class CapabilityScaffoldComposer
         return $plan;
     }
 
-    public function enableMessaging(ScaffoldPlan $plan): ScaffoldPlan
+    /**
+     * @param list<string> $capabilityIds
+     */
+    public function enableMessaging(ScaffoldPlan $plan, array $capabilityIds): ScaffoldPlan
     {
         $yaml = null;
         foreach ($plan->actions() as $action) {
@@ -65,6 +68,8 @@ final class CapabilityScaffoldComposer
             features: [
                 'http' => $manifest->features['http'],
                 'messaging' => true,
+                'consumer' => $manifest->features['consumer'] || in_array('consumer', $capabilityIds, true),
+                'producer' => $manifest->features['producer'] || in_array('producer', $capabilityIds, true),
             ],
             architecture: $manifest->architecture,
             runtime: $manifest->runtime,

@@ -67,6 +67,7 @@ final class MinimalPreset implements PresetDefinition
             messaging: false,
             modules: false,
             extra: $options->extra,
+            selection: $options->selection,
         );
 
         $plan

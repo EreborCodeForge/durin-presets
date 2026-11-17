@@ -42,6 +42,8 @@ final class ConsumerProducerPresetTest extends TestCase
         $this->assertSame('consumer', $manifest->preset);
         $this->assertFalse($manifest->features['http']);
         $this->assertTrue($manifest->features['messaging']);
+        $this->assertTrue($manifest->features['consumer']);
+        $this->assertFalse($manifest->features['producer']);
         $this->assertNull($manifest->runtime);
 
         $runtime = (new DefaultPresetRegistryFactory())->create()->definition('consumer')->runtime();
@@ -75,6 +77,8 @@ final class ConsumerProducerPresetTest extends TestCase
         $this->assertSame('producer', $manifest->preset);
         $this->assertTrue($manifest->features['http']);
         $this->assertTrue($manifest->features['messaging']);
+        $this->assertFalse($manifest->features['consumer']);
+        $this->assertTrue($manifest->features['producer']);
 
         $runtime = (new DefaultPresetRegistryFactory())->create()->definition('producer')->runtime();
         $this->assertSame('http', $runtime->mode);
