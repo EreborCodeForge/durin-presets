@@ -11,20 +11,11 @@
     ],
     "require": {
         "php": "^8.5",
-        "ereborcodeforge/durin-core": "^0.2"
+        "ereborcodeforge/durin-core": "^0.2.1"
     },
     "require-dev": {
         "phpunit/phpunit": "^12.5"
     },
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../durin-core",
-            "options": {
-                "symlink": true
-            }
-        }
-    ],
     "autoload": {
         "psr-4": {
             "EreborCodeForge\\Durin\\Presets\\": "src/"
