@@ -71,7 +71,9 @@ $result = (new ScaffoldWriter())->write('/path/to/billing', $plan);
 2. Register it in `DefaultPresetRegistryFactory`.
 3. Release `durin-presets`.
 
-No production changes are required in `durin-installer`, `durins-forge`, or `durin-app`.
+No production changes are required in `durin-installer`, `durins-forge`, or `durin-app` for a preset that only uses the existing catalog.
+
+Generated app docs name `durins-forge`, `durins-forge run` and `vendor/bin/durins-forge`. `vendor/bin/durin` remains a compatibility alias. Scaling policy files in this checkout are unpublished; Packagist `0.3.6` is unchanged.
 
 ## Dependency direction
 

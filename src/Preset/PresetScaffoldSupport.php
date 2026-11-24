@@ -156,7 +156,7 @@ if (PHP_SAPI !== 'cli') {
     header('Content-Type: application/json');
     echo json_encode([
         'error' => true,
-        'message' => 'HTTP entry is CLI-only. Run: vendor/bin/durin run',
+        'message' => 'HTTP entry is CLI-only. Run: durins-forge run (or vendor/bin/durins-forge run)',
     ]);
     exit(1);
 }
@@ -709,8 +709,9 @@ Created with `durin new` preset **worker** (job / non-HTTP).
 composer install
 cp .env.example .env
 # bind a real JobTransport in JobKernel::boot()
-vendor/bin/durin run
-vendor/bin/durin doctor
+durins-forge run
+durins-forge doctor
+# CI / container: vendor/bin/durins-forge run
 ```
 
 This worker runs standalone with Mithril by default.
@@ -755,8 +756,9 @@ Created with `durin new` preset **{$preset}**.
 ```bash
 composer install
 cp .env.example .env
-vendor/bin/durin run
-vendor/bin/durin doctor
+durins-forge run
+durins-forge doctor
+# CI / container: vendor/bin/durins-forge run
 ```
 
 Structure:
@@ -790,8 +792,9 @@ The in-memory transport is only for `APP_ENV=development` or `testing`.
 ```bash
 composer install
 cp .env.example .env
-vendor/bin/durin run
-vendor/bin/durin doctor
+durins-forge run
+durins-forge doctor
+# CI / container: vendor/bin/durins-forge run
 ```
 
 Low-level / debug execution (not the primary Durin UX):
@@ -830,8 +833,9 @@ Execution stays `mithril-http`. This preset does not add a public `/publish` rou
 ```bash
 composer install
 cp .env.example .env
-vendor/bin/durin run
-vendor/bin/durin doctor
+durins-forge run
+durins-forge doctor
+# CI / container: vendor/bin/durins-forge run
 ```
 
 Structure:

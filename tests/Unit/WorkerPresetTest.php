@@ -78,13 +78,14 @@ final class WorkerPresetTest extends TestCase
         $this->assertStringNotContainsString('runtimeServer', $yaml);
 
         $readme = (string) file_get_contents($target . '/README.md');
-        $this->assertStringContainsString('vendor/bin/durin run', $readme);
+        $this->assertStringContainsString('durins-forge run', $readme);
+        $this->assertStringContainsString('vendor/bin/durins-forge run', $readme);
         $this->assertStringContainsString('Eregion is optional', $readme);
         $this->assertStringNotContainsString('does not use Eregion', $readme);
         $this->assertMatchesRegularExpression(
-            '/vendor\/bin\/durin run[\s\S]*php vendor\/bin\/job-worker/s',
+            '/durins-forge run[\s\S]*php vendor\/bin\/job-worker/s',
             $readme,
-            'durin run must be the primary entry; job-worker remains a low-level option',
+            'durins-forge run must be the primary entry; job-worker remains a low-level option',
         );
 
         $kernel = (string) file_get_contents($target . '/src/JobKernel.php');

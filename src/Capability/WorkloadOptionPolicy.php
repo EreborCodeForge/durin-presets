@@ -12,6 +12,12 @@ use EreborCodeForge\Durin\Core\Contract\ProjectSelection;
  */
 final class WorkloadOptionPolicy
 {
+    /** @var list<string> */
+    public const array LEGACY = ['fixed', 'resources', 'backlog'];
+
+    /** @var list<string> */
+    public const array ADVANCED = ['cpu_utilization', 'latency', 'throughput', 'hybrid', 'scheduled', 'adaptive'];
+
     /**
      * @param list<string> $features
      */
@@ -25,11 +31,14 @@ final class WorkloadOptionPolicy
         ?int $workersMax,
         ?string $resourceClass,
         ?int $memoryMb,
+        ?string $scalingPolicy = null,
+        ?string $resourceGuardMode = null,
     ): ProjectSelection {
         $effective = $this->effectiveSupervisor($mode, $supervisorChoice);
+        $advanced = $scalingStrategy !== null && in_array($scalingStrategy, self::ADVANCED, true);
 
-        if ($scalingStrategy !== null && !in_array($scalingStrategy, ['fixed', 'resources', 'backlog'], true)) {
-            throw new WorkloadOptionException('Unknown --scaling. Use fixed, resources, or backlog.');
+        if ($scalingStrategy !== null && !in_array($scalingStrategy, [...self::LEGACY, ...self::ADVANCED], true)) {
+            throw new WorkloadOptionException('Unknown --scaling. Use fixed, resources, backlog, cpu_utilization, latency, throughput, hybrid, scheduled, or adaptive.');
         }
 
         if ($scalingStrategy === 'backlog') {
@@ -38,16 +47,48 @@ final class WorkloadOptionPolicy
             );
         }
 
+        if ($scalingPolicy !== null && $scalingStrategy === null) {
+            throw new WorkloadOptionException('--scaling-policy requires an explicit --scaling strategy.');
+        }
+        if ($scalingPolicy !== null && !$advanced) {
+            throw new WorkloadOptionException('--scaling-policy applies only to cpu_utilization, latency, throughput, hybrid, scheduled, and adaptive.');
+        }
+        if ($resourceGuardMode !== null && !$advanced) {
+            throw new WorkloadOptionException('--resource-guard-mode applies only when a new scaling strategy is selected.');
+        }
+        if ($resourceGuardMode !== null && !in_array($resourceGuardMode, ['observe', 'enforce'], true)) {
+            throw new WorkloadOptionException('Unknown --resource-guard-mode. Use observe or enforce.');
+        }
+        if ($scalingStrategy === 'adaptive' && $resourceGuardMode !== 'enforce') {
+            throw new WorkloadOptionException('--scaling=adaptive requires --resource-guard-mode=enforce.');
+        }
+
+        $needsPolicy = in_array($scalingStrategy, ['throughput', 'scheduled', 'adaptive'], true)
+            || ($scalingStrategy === 'hybrid' && $mode === 'job');
+        if ($needsPolicy && $scalingPolicy === null) {
+            throw new WorkloadOptionException('--scaling=' . $scalingStrategy . ' requires --scaling-policy=PATH.');
+        }
+
         $workloadRequested = $scalingStrategy !== null
             || $workersMin !== null
             || $workersMax !== null
             || $resourceClass !== null
-            || $memoryMb !== null;
+            || $memoryMb !== null
+            || $scalingPolicy !== null
+            || $resourceGuardMode !== null;
 
-        if ($workloadRequested && ($mode !== 'job' || $effective !== 'eregion')) {
+        if ($advanced && $effective !== 'eregion') {
+            throw new WorkloadOptionException('--scaling=' . $scalingStrategy . ' requires supervisor eregion.');
+        }
+
+        if ($workloadRequested && !$advanced && ($mode !== 'job' || $effective !== 'eregion')) {
             throw new WorkloadOptionException(
                 '--scaling, --workers-min, --workers-max, --resource-class, and --memory-mb require runtime mode job and supervisor eregion.'
             );
+        }
+
+        if ($advanced && ($workersMin === null || $workersMax === null)) {
+            throw new WorkloadOptionException('--scaling=' . $scalingStrategy . ' requires explicit --workers-min and --workers-max.');
         }
 
         if ($workersMin !== null && $workersMin < 0) {
@@ -55,6 +96,13 @@ final class WorkloadOptionPolicy
         }
         if ($workersMax !== null && $workersMax < 1) {
             throw new WorkloadOptionException('Invalid --workers-max: expected an integer greater than or equal to 1.');
+        }
+
+        $requiresMinOne = in_array($scalingStrategy, ['cpu_utilization', 'latency', 'throughput', 'adaptive'], true)
+            || ($scalingStrategy === 'hybrid' && $mode === 'http')
+            || ($scalingStrategy === 'scheduled' && $mode === 'http');
+        if ($requiresMinOne && $workersMin !== null && $workersMin < 1) {
+            throw new WorkloadOptionException('--scaling=' . $scalingStrategy . ' requires --workers-min >= 1.');
         }
 
         if ($workersMin !== null || $workersMax !== null) {
@@ -74,6 +122,11 @@ final class WorkloadOptionPolicy
             throw new WorkloadOptionException('Invalid --memory-mb: expected a positive integer.');
         }
 
+        $fragment = [];
+        if ($scalingPolicy !== null && $scalingStrategy !== null) {
+            $fragment = ScalingPolicyFile::read($scalingPolicy, $scalingStrategy, $mode);
+        }
+
         return new ProjectSelection(
             presetId: $presetId,
             features: array_values($features),
@@ -83,6 +136,9 @@ final class WorkloadOptionPolicy
             workersMax: $workersMax,
             resourceClass: $resourceClass,
             memoryMb: $memoryMb,
+            scalingPolicyPath: $scalingPolicy,
+            resourceGuardMode: $resourceGuardMode,
+            scalingFragment: $fragment,
         );
     }
 

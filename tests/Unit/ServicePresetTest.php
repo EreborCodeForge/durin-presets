@@ -79,7 +79,8 @@ final class ServicePresetTest extends TestCase
         $this->assertStringNotContainsString('runtimeServer', $yaml);
 
         $readme = (string) file_get_contents($target . '/README.md');
-        $this->assertStringContainsString('vendor/bin/durin run', $readme);
+        $this->assertStringContainsString('durins-forge run', $readme);
+        $this->assertStringContainsString('vendor/bin/durins-forge run', $readme);
     }
 
     public function test_service_is_registered_in_default_registry(): void

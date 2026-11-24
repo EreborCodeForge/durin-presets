@@ -83,7 +83,8 @@ final class MinimalPresetTest extends TestCase
         $this->assertStringNotContainsString('runtimeServer', $yaml);
 
         $readme = (string) file_get_contents($target . '/README.md');
-        $this->assertStringContainsString('vendor/bin/durin run', $readme);
+        $this->assertStringContainsString('durins-forge run', $readme);
+        $this->assertStringContainsString('vendor/bin/durins-forge run', $readme);
     }
 
     public function test_writer_is_conflict_safe_on_second_run_with_changed_file(): void
