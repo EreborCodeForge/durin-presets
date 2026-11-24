@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": "^8.5",
-        "ereborcodeforge/durin-core": "^0.2.1"
+        "ereborcodeforge/durin-core": "^0.2.2"
     },
     "require-dev": {
         "phpunit/phpunit": "^12.5"
